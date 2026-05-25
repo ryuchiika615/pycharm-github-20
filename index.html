@@ -56,10 +56,16 @@
           <select id="daySelect"></select>
         </label>
         <label>
-          &#24517;&#35201;&#20154;&#25968;
-          <input id="requiredPeople" type="number" min="1" max="12" value="4" />
+          &#21320;&#21069;&#24517;&#35201;&#20154;&#25968;
+          <input id="requiredMorning" type="number" min="0" max="12" value="2" />
+        </label>
+        <label>
+          &#21320;&#24460;&#24517;&#35201;&#20154;&#25968;
+          <input id="requiredEvening" type="number" min="0" max="12" value="3" />
         </label>
         <button id="autoPickButton" class="primary manager-only">&#12362;&#12377;&#12377;&#12417;&#36984;&#20986;</button>
+        <button id="printButton" type="button">&#34920;&#12434;&#21360;&#21047;</button>
+        <button id="zoomButton" type="button">&#34920;&#12434;&#25313;&#22823;</button>
       </section>
 
       <section id="modeNotice" class="notice"></section>
@@ -98,6 +104,21 @@
             <span id="wishOwner"></span>
           </div>
           <form id="wishForm" class="wish-form staff-wish-form">
+            <div class="quick-wish">
+              <label>
+                &#26085;&#20184;
+                <select id="wishDay"></select>
+              </label>
+              <label>
+                &#38283;&#22987;
+                <input id="wishStart" type="time" value="09:00" />
+              </label>
+              <label>
+                &#32066;&#20102;
+                <input id="wishEnd" type="time" value="22:00" />
+              </label>
+              <button type="button" id="addOneWishButton">&#12371;&#12398;&#26085;&#12434;&#368追;&#21152;</button>
+            </div>
             <label class="wide">
               LINE&#12398;&#25991;&#31456;&#12434;&#12381;&#12398;&#12414;&#12414;&#36028;&#12426;&#20184;&#12369;
               <textarea id="wishText" placeholder="6&#26376;&#21069;&#21322;&#12471;&#12501;&#12488;&#24076;&#26395;&#10;1&#26085;&#12289;2&#26085;&#12289;5&#26085; 18&#26178;&#65374;&#10;6&#26085;&#12289;13&#26085; 16&#26178;&#65374;"></textarea>
@@ -135,6 +156,7 @@
             </label>
             <button class="primary" type="submit">&#20445;&#23384;</button>
             <button id="clearMemberButton" type="button">&#26032;&#35215;&#20837;&#21147;</button>
+            <button id="deleteMemberButton" class="danger-button" type="button">&#21066;&#38500;</button>
           </form>
         </section>
 
@@ -147,6 +169,7 @@
         </section>
       </section>
     </main>
+    <button id="zoomExitButton" class="screenshot-exit" type="button">&#34920;&#12434;&#25147;&#12377;</button>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>

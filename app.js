@@ -39,6 +39,8 @@ const defaultStaff = [
 let staff = load("shiftStaff", defaultStaff);
 let wishes = load("shiftWishes", {});
 let assignments = load("shiftAssignments", {});
+let noodleAssignments = load("shiftNoodleAssignments", {});
+let salesNotes = load("shiftSalesNotes", {});
 let currentUser = null;
 let selectedMonth = 6;
 let period = "first";
@@ -60,10 +62,13 @@ const $ = (selector) => document.querySelector(selector);
 const monthSelect = $("#monthSelect");
 const periodSelect = $("#periodSelect");
 const daySelect = $("#daySelect");
-const requiredPeople = $("#requiredPeople");
+const requiredMorning = $("#requiredMorning");
+const requiredEvening = $("#requiredEvening");
 const shiftTable = $("#shiftTable");
 const candidateList = $("#candidateList");
 const exportText = $("#exportText");
+const openTime = "09:00";
+const closeTime = "22:00";
 
 function load(name, fallback) {
   try {
@@ -77,12 +82,14 @@ function saveAll() {
   localStorage.setItem("shiftStaff", JSON.stringify(staff));
   localStorage.setItem("shiftWishes", JSON.stringify(wishes));
   localStorage.setItem("shiftAssignments", JSON.stringify(assignments));
+  localStorage.setItem("shiftNoodleAssignments", JSON.stringify(noodleAssignments));
+  localStorage.setItem("shiftSalesNotes", JSON.stringify(salesNotes));
   if (cloudReady) {
     cloud
       .from("shift_state")
       .upsert({
         id: "main",
-        data: { staff, wishes, assignments },
+        data: { staff, wishes, assignments, noodleAssignments, salesNotes },
         updated_at: new Date().toISOString()
       })
       .then(({ error }) => {
@@ -100,16 +107,18 @@ async function connectCloud() {
     console.warn("Cloud load failed", error.message);
     return;
   }
+  cloudReady = true;
   if (data?.data) {
     staff = data.data.staff || staff;
     wishes = data.data.wishes || wishes;
     assignments = data.data.assignments || assignments;
+    noodleAssignments = data.data.noodleAssignments || noodleAssignments;
+    salesNotes = data.data.salesNotes || salesNotes;
     resetRosterIfOutdated();
     saveAll();
   } else {
-    await cloud.from("shift_state").insert({ id: "main", data: { staff, wishes, assignments } });
+    await cloud.from("shift_state").insert({ id: "main", data: { staff, wishes, assignments, noodleAssignments, salesNotes } });
   }
-  cloudReady = true;
 }
 
 function cloudLabel() {
@@ -171,10 +180,27 @@ function getAssignment(day, staffId) {
   return (assignments[key(day)] || []).find((item) => item.staffId === Number(staffId));
 }
 
+function workStaff() {
+  return sortedStaff().filter((member) => member.section !== "manager");
+}
+
 function hoursBetween(start, end) {
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
   return Math.max(0, eh + em / 60 - (sh + sm / 60));
+}
+
+function minutes(time) {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function overlaps(item, start, end) {
+  return minutes(item.start) < minutes(end) && minutes(item.end) > minutes(start);
+}
+
+function canEditWish(staffId) {
+  return isManager() || currentUser?.id === Number(staffId);
 }
 
 function staffHours(staffId) {
@@ -216,13 +242,13 @@ function parseWishText(text) {
       addParsedDays(results, pendingDays, `${pad(Number(startEnd[1]))}:00`, startEnd[2] ? `${pad(Number(startEnd[2]))}:00` : "22:00");
       pendingDays = [];
     } else if (pendingDays.length && endOnly && !startOnly) {
-      addParsedDays(results, pendingDays, "10:00", `${pad(Number(endOnly[1]))}:00`);
+      addParsedDays(results, pendingDays, openTime, `${pad(Number(endOnly[1]))}:00`);
       pendingDays = [];
     } else if (pendingDays.length && startOnly) {
       addParsedDays(results, pendingDays, `${pad(Number(startOnly[1]))}:00`, "22:00");
       pendingDays = [];
     } else if (days.length) {
-      addParsedDays(results, days, "10:00", "15:00");
+      addParsedDays(results, days, openTime, closeTime);
       pendingDays = [];
     }
   }
@@ -290,8 +316,10 @@ function renderSelectors() {
 
 function renderDaySelect() {
   daySelect.innerHTML = periodDays().map((day) => `<option value="${day}">${day}\u65e5</option>`).join("");
+  $("#wishDay").innerHTML = periodDays().map((day) => `<option value="${day}">${day}\u65e5</option>`).join("");
   if (!periodDays().includes(selectedDay)) selectedDay = periodDays()[0];
   daySelect.value = selectedDay;
+  $("#wishDay").value = selectedDay;
 }
 
 function renderMode() {
@@ -313,10 +341,10 @@ function renderTable() {
   let lastSection = "";
 
   sortedStaff().forEach((member) => {
-    if (member.section === "manager") return;
     if (member.section !== lastSection) {
-      if (member.section === "hall") rows.push(blankRows(3, days.length + 1, "\u88fd\u9eba\u30fb\u30e1\u30e2"));
-      rows.push(`<tr class="section-row"><td colspan="${days.length + 1}">${member.section === "kitchen" ? labels.kitchen : labels.hall}</td></tr>`);
+      if (member.section === "hall") rows.push(noodleRows(days));
+      if (member.section === "hall") rows.push(shortageRows(days));
+      rows.push(`<tr class="section-row"><td colspan="${days.length + 1}">${sectionName(member.section)}</td></tr>`);
       lastSection = member.section;
     }
     rows.push(`
@@ -326,12 +354,12 @@ function renderTable() {
       </tr>
     `);
   });
-  rows.push(blankRows(2, days.length + 1, "\u58f2\u4e0a\u30fb\u30e1\u30e2"));
+  rows.push(salesRows(days));
 
   shiftTable.innerHTML = `
     <thead>
-      <tr><th class="name-col">\u66dc\u65e5</th>${days.map((day) => `<th class="${dayClass(day)}">${weekday(day)}</th>`).join("")}</tr>
-      <tr><th class="name-col">\u540d\u524d</th>${days.map((day) => `<th class="${dayClass(day)}">${day}</th>`).join("")}</tr>
+      <tr><th class="name-col">\u66dc\u65e5</th>${days.map((day) => `<th class="${dayClass(day)} ${day === selectedDay ? "selected-day" : ""}">${weekday(day)}</th>`).join("")}</tr>
+      <tr><th class="name-col">\u540d\u524d</th>${days.map((day) => `<th class="${dayClass(day)} ${day === selectedDay ? "selected-day" : ""}">${day}</th>`).join("")}</tr>
     </thead>
     <tbody>${rows.join("")}</tbody>
   `;
@@ -339,6 +367,12 @@ function renderTable() {
   const totalWishes = days.reduce((sum, day) => sum + (wishes[key(day)] || []).length, 0);
   const totalAssigned = days.reduce((sum, day) => sum + (assignments[key(day)] || []).length, 0);
   $("#boardSummary").textContent = `${labels.desired} ${totalWishes}${labels.people} / ${labels.decided} ${totalAssigned}${labels.people}`;
+}
+
+function sectionName(section) {
+  if (section === "manager") return labels.manager;
+  if (section === "kitchen") return labels.kitchen;
+  return labels.hall;
 }
 
 function blankRows(count, colspan, label) {
@@ -350,21 +384,91 @@ function blankRows(count, colspan, label) {
   `).join("");
 }
 
+function noodleRows(days) {
+  return Array.from({ length: 3 }, (_, index) => `
+    <tr class="memo-row noodle-row">
+      <td class="name-col">${index === 0 ? "\u88fd\u9eba" : ""}</td>
+      ${days.map((day) => `<td class="${day === selectedDay ? "selected-day" : ""}">${index === 0 ? noodleCell(day) : ""}</td>`).join("")}
+    </tr>
+  `).join("");
+}
+
+function noodleCell(day) {
+  const selected = noodleAssignments[key(day)] || "";
+  if (!isManager()) return selected ? staffById(selected)?.name || "" : "";
+  return `
+    <select class="table-select" data-action="noodle" data-day="${day}">
+      <option value=""></option>
+      ${workStaff().map((member) => `<option value="${member.id}" ${Number(selected) === member.id ? "selected" : ""}>${member.name}</option>`).join("")}
+    </select>
+  `;
+}
+
+function shortageRows(days) {
+  return `
+    <tr class="shortage-row">
+      <td class="name-col">\u5348\u524d\u4e0d\u8db3</td>
+      ${days.map((day) => `<td class="${day === selectedDay ? "selected-day" : ""}">${shortageText(day, "09:00", "15:00", Number(requiredMorning.value))}</td>`).join("")}
+    </tr>
+    <tr class="shortage-row">
+      <td class="name-col">\u5348\u5f8c\u4e0d\u8db3</td>
+      ${days.map((day) => `<td class="${day === selectedDay ? "selected-day" : ""}">${shortageText(day, "17:00", closeTime, Number(requiredEvening.value))}</td>`).join("")}
+    </tr>
+  `;
+}
+
+function shortageText(day, start, end, need) {
+  const count = (assignments[key(day)] || []).filter((item) => overlaps(item, start, end)).length;
+  const shortage = need - count;
+  return shortage > 0 ? `-${shortage}` : "";
+}
+
+function salesRows(days) {
+  return `
+    <tr class="sales-row">
+      <td class="name-col">\u58f2\u4e0a \u663c</td>
+      ${days.map((day) => `<td class="${day === selectedDay ? "selected-day" : ""}">${salesCell(day, "lunch")}</td>`).join("")}
+    </tr>
+    <tr class="sales-row">
+      <td class="name-col">\u58f2\u4e0a \u30c7\u30a3\u30ca\u30fc</td>
+      ${days.map((day) => `<td class="${day === selectedDay ? "selected-day" : ""}">${salesCell(day, "dinner")}</td>`).join("")}
+    </tr>
+  `;
+}
+
+function salesCell(day, part) {
+  const note = salesNotes[key(day)] || {};
+  const amount = note[`${part}Amount`] || "";
+  const count = note[`${part}Count`] || "";
+  if (!isManager()) return amount || count ? `${amount}(${count})` : "";
+  return `
+    <span class="sales-inputs">
+      <input data-action="sales" data-day="${day}" data-part="${part}" data-field="Amount" inputmode="numeric" maxlength="3" value="${amount}" />
+      <span>(</span>
+      <input data-action="sales" data-day="${day}" data-part="${part}" data-field="Count" inputmode="numeric" maxlength="3" value="${count}" />
+      <span>)</span>
+    </span>
+  `;
+}
+
 function renderShiftCell(day, member) {
   const wish = getWish(day, member.id);
   const assigned = getAssignment(day, member.id);
   const clickable = wish ? `data-day="${day}" data-id="${member.id}"` : "";
-  if (assigned) return `<td class="cell assigned" ${clickable}>${assigned.start.replace(":00", "")}<br>${assigned.end.replace(":00", "")}</td>`;
-  if (wish) return `<td class="cell rejected" ${clickable}>-</td>`;
-  return `<td class="cell unavailable"></td>`;
+  const selectedClass = day === selectedDay ? "selected-day" : "";
+  if (assigned) return `<td class="cell assigned ${selectedClass}" ${clickable}>${assigned.start.replace(":00", "")}<br>${assigned.end.replace(":00", "")}</td>`;
+  if (wish) return `<td class="cell rejected ${selectedClass}" ${clickable}>-</td>`;
+  return `<td class="cell unavailable ${selectedClass}"></td>`;
 }
 
 function renderCandidates() {
   const list = wishes[key()] || [];
   const assigned = assignments[key()] || [];
   $("#dayTitle").textContent = `${selectedMonth}\u6708${selectedDay}\u65e5\u306e\u5e0c\u671b`;
-  $("#coverageBadge").textContent = `${assigned.length}/${requiredPeople.value}${labels.people}`;
-  $("#coverageBadge").className = `badge ${assigned.length >= Number(requiredPeople.value) ? "ok" : "danger"}`;
+  const morningShortage = shortageText(selectedDay, "09:00", "15:00", Number(requiredMorning.value)) || "OK";
+  const eveningShortage = shortageText(selectedDay, "17:00", closeTime, Number(requiredEvening.value)) || "OK";
+  $("#coverageBadge").textContent = `\u5348\u524d ${morningShortage} / \u5348\u5f8c ${eveningShortage}`;
+  $("#coverageBadge").className = `badge ${morningShortage === "OK" && eveningShortage === "OK" ? "ok" : "danger"}`;
 
   candidateList.innerHTML = list.length
     ? list.map(renderCandidate).join("")
@@ -375,21 +479,21 @@ function renderCandidate(wish) {
   const member = staffById(wish.staffId);
   const picked = Boolean(getAssignment(selectedDay, member.id));
   const tag = risk(member, picked ? 0 : hoursBetween(wish.start, wish.end));
+  const editable = canEditWish(member.id);
   return `
     <article class="candidate-card ${picked ? "selected" : ""}">
       <div class="row">
         <div>
           <div class="name">${member.name}</div>
-          <div class="meta">${member.section === "kitchen" ? labels.kitchen : labels.hall} / ${member.type}</div>
+          <div class="meta">${sectionName(member.section)} / ${wish.start} - ${wish.end}</div>
         </div>
         <span class="tag ${tag.className}">${tag.text}</span>
       </div>
-      <div class="candidate-actions manager-only">
-        <input type="time" value="${wish.start}" data-action="start" data-id="${member.id}" />
-        <input type="time" value="${wish.end}" data-action="end" data-id="${member.id}" />
-        <button class="select-button ${picked ? "selected" : ""}" data-action="toggle" data-id="${member.id}">
-          ${picked ? labels.picked : labels.pick}
-        </button>
+      <div class="candidate-actions ${editable ? "" : "hidden-actions"}">
+        <input type="time" value="${wish.start}" data-action="start" data-id="${member.id}" ${editable ? "" : "disabled"} />
+        <input type="time" value="${wish.end}" data-action="end" data-id="${member.id}" ${editable ? "" : "disabled"} />
+        ${isManager() ? `<button class="select-button ${picked ? "selected" : ""}" data-action="toggle" data-id="${member.id}">${picked ? labels.picked : labels.pick}</button>` : ""}
+        ${editable ? `<button data-action="deleteWish" data-id="${member.id}">\u524a\u9664</button>` : ""}
       </div>
     </article>
   `;
@@ -449,7 +553,7 @@ function toggleAssignment(day, staffId) {
 
 function autoPick() {
   if (!isManager()) return;
-  const required = Number(requiredPeople.value);
+  const required = Math.max(Number(requiredMorning.value), Number(requiredEvening.value));
   periodDays().forEach((day) => {
     assignments[key(day)] = [...(wishes[key(day)] || [])]
       .sort((a, b) => staffById(a.staffId).sort - staffById(b.staffId).sort)
@@ -461,11 +565,19 @@ function autoPick() {
 }
 
 function updateWishTime(staffId, field, value) {
-  if (!isManager()) return;
+  if (!canEditWish(staffId)) return;
   const wish = getWish(selectedDay, staffId);
   if (wish) wish[field] = value;
   const assignment = getAssignment(selectedDay, staffId);
   if (assignment) assignment[field] = value;
+  saveAll();
+  renderAll();
+}
+
+function deleteWish(staffId) {
+  if (!canEditWish(staffId)) return;
+  wishes[key()] = (wishes[key()] || []).filter((wish) => wish.staffId !== Number(staffId));
+  assignments[key()] = (assignments[key()] || []).filter((item) => item.staffId !== Number(staffId));
   saveAll();
   renderAll();
 }
@@ -485,6 +597,22 @@ function editMember(id) {
   $("#memberSection").value = member.section;
   $("#memberSort").value = member.sort;
   $("#memberPin").value = member.pin;
+}
+
+function deleteMember() {
+  if (!isManager()) return;
+  const id = Number($("#memberId").value);
+  if (!id || id === currentUser.id) return;
+  staff = staff.filter((member) => member.id !== id);
+  Object.keys(wishes).forEach((dayKey) => {
+    wishes[dayKey] = wishes[dayKey].filter((wish) => wish.staffId !== id);
+  });
+  Object.keys(assignments).forEach((dayKey) => {
+    assignments[dayKey] = assignments[dayKey].filter((item) => item.staffId !== id);
+  });
+  clearMemberForm();
+  saveAll();
+  renderAll();
 }
 
 $("#loginForm").addEventListener("submit", (event) => {
@@ -522,8 +650,19 @@ daySelect.addEventListener("change", (event) => {
   renderAll();
 });
 
-requiredPeople.addEventListener("change", renderAll);
+requiredMorning.addEventListener("change", renderAll);
+requiredEvening.addEventListener("change", renderAll);
 $("#autoPickButton").addEventListener("click", autoPick);
+$("#printButton").addEventListener("click", () => window.print());
+function toggleScreenshotMode() {
+  document.body.classList.toggle("screenshot-mode");
+  $("#zoomButton").textContent = document.body.classList.contains("screenshot-mode")
+    ? "\u8868\u3092\u623b\u3059"
+    : "\u8868\u3092\u62e1\u5927";
+}
+
+$("#zoomButton").addEventListener("click", toggleScreenshotMode);
+$("#zoomExitButton").addEventListener("click", toggleScreenshotMode);
 
 shiftTable.addEventListener("click", (event) => {
   const cell = event.target.closest("[data-day][data-id]");
@@ -534,9 +673,33 @@ shiftTable.addEventListener("click", (event) => {
   else renderAll();
 });
 
+shiftTable.addEventListener("change", (event) => {
+  const field = event.target.closest("[data-action]");
+  if (!field || !isManager()) return;
+  const day = Number(field.dataset.day);
+  if (field.dataset.action === "noodle") {
+    noodleAssignments[key(day)] = field.value;
+  }
+  if (field.dataset.action === "sales") {
+    salesNotes[key(day)] ||= {};
+    const prop = `${field.dataset.part}${field.dataset.field}`;
+    salesNotes[key(day)][prop] = field.value.replace(/\D/g, "").slice(0, 3);
+  }
+  saveAll();
+  renderAll();
+});
+
+shiftTable.addEventListener("input", (event) => {
+  const field = event.target.closest("input[data-action='sales']");
+  if (!field || !isManager()) return;
+  field.value = field.value.replace(/\D/g, "").slice(0, 3);
+});
+
 candidateList.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-action='toggle']");
-  if (button) toggleAssignment(selectedDay, Number(button.dataset.id));
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+  if (button.dataset.action === "toggle") toggleAssignment(selectedDay, Number(button.dataset.id));
+  if (button.dataset.action === "deleteWish") deleteWish(Number(button.dataset.id));
 });
 
 candidateList.addEventListener("change", (event) => {
@@ -550,6 +713,15 @@ $("#wishForm").addEventListener("submit", (event) => {
   parseWishText($("#wishText").value).forEach((wish) => addWish(currentUser, wish.day, wish.start, wish.end));
   $("#wishText").value = "";
   saveAll();
+  renderAll();
+});
+
+$("#addOneWishButton").addEventListener("click", () => {
+  if (!currentUser) return;
+  addWish(currentUser, Number($("#wishDay").value), $("#wishStart").value || openTime, $("#wishEnd").value || closeTime);
+  saveAll();
+  selectedDay = Number($("#wishDay").value);
+  daySelect.value = selectedDay;
   renderAll();
 });
 
@@ -578,6 +750,7 @@ $("#memberForm").addEventListener("submit", (event) => {
 });
 
 $("#clearMemberButton").addEventListener("click", clearMemberForm);
+$("#deleteMemberButton").addEventListener("click", deleteMember);
 
 $("#staffList").addEventListener("click", (event) => {
   const button = event.target.closest(".edit-member");

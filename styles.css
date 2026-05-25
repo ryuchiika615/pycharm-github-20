@@ -128,7 +128,7 @@ main {
 }
 
 .controls {
-  grid-template-columns: repeat(5, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   margin-bottom: 12px;
 }
 
@@ -248,6 +248,7 @@ textarea {
   text-align: center;
   vertical-align: middle;
   background: #fff;
+  overflow: hidden;
 }
 
 .shift-table th {
@@ -351,9 +352,13 @@ textarea {
 
 .candidate-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 80px;
+  grid-template-columns: 1fr 1fr auto auto;
   gap: 7px;
   margin-top: 9px;
+}
+
+.hidden-actions {
+  display: none;
 }
 
 .select-button.selected {
@@ -420,6 +425,12 @@ textarea {
   padding: 12px;
 }
 
+.quick-wish {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 10px;
+}
+
 .locked .manager-only {
   display: none;
 }
@@ -427,6 +438,141 @@ textarea {
 .memo-row td {
   height: 38px;
   background: #fffdf7;
+}
+
+.table-select {
+  width: 100%;
+  min-height: 28px;
+  border: 0;
+  border-radius: 0;
+  padding: 2px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  appearance: none;
+}
+
+.shortage-row td {
+  height: 36px;
+  background: #fff4df;
+  color: var(--red);
+  font-weight: 900;
+}
+
+.sales-row td {
+  height: 42px;
+  background: #fffdf7;
+}
+
+.sales-inputs {
+  display: inline-grid;
+  grid-template-columns: minmax(22px, 1fr) auto minmax(22px, 1fr) auto;
+  align-items: center;
+  gap: 1px;
+  max-width: 100%;
+}
+
+.sales-inputs input {
+  min-height: 24px;
+  border: 0;
+  border-bottom: 1px solid #c8d0ca;
+  border-radius: 0;
+  padding: 1px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  background: transparent;
+}
+
+.selected-day {
+  background: #dff4ee !important;
+  outline: 2px solid rgba(25, 115, 101, 0.24);
+  outline-offset: -2px;
+}
+
+.danger-button {
+  border-color: #f1b5b5;
+  color: var(--red);
+}
+
+.screenshot-exit {
+  display: none;
+}
+
+.screenshot-mode {
+  background: #fff;
+}
+
+.screenshot-mode .topbar,
+.screenshot-mode .controls,
+.screenshot-mode .notice,
+.screenshot-mode .side-panel,
+.screenshot-mode .lower-grid {
+  display: none;
+}
+
+.screenshot-mode main {
+  padding: 0;
+}
+
+.screenshot-mode .main-grid {
+  display: block;
+}
+
+.screenshot-mode .board-panel {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.screenshot-mode .panel-heading {
+  padding: 6px 8px;
+}
+
+.screenshot-mode .panel-heading p {
+  display: none;
+}
+
+.screenshot-mode .table-wrap {
+  max-height: none;
+  overflow: visible;
+}
+
+.screenshot-mode .shift-table {
+  min-width: 0;
+  width: 100vw;
+  font-size: clamp(7px, 1.55vw, 11px);
+}
+
+.screenshot-mode .shift-table th,
+.screenshot-mode .shift-table td {
+  height: clamp(24px, 4.9vw, 38px);
+  padding: 1px;
+}
+
+.screenshot-mode .name-col {
+  width: 54px;
+  padding-left: 2px;
+  position: static;
+}
+
+.screenshot-mode .table-select,
+.screenshot-mode .sales-inputs input {
+  font-size: inherit;
+  border: 0;
+}
+
+.screenshot-mode .screenshot-exit {
+  display: block;
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  z-index: 20;
+  min-height: 34px;
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .staff-card .edit-member {
@@ -451,7 +597,47 @@ textarea {
   .session-box,
   .wish-form,
   .member-form,
+  .quick-wish,
   .candidate-actions {
     grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .board-panel,
+  .board-panel * {
+    visibility: visible;
+  }
+
+  .board-panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none;
+    border: 0;
+  }
+
+  .table-wrap {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .shift-table {
+    min-width: 0;
+    font-size: 10px;
+  }
+
+  .shift-table th,
+  .shift-table td {
+    height: 34px;
   }
 }
