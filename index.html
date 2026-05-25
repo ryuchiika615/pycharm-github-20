@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>&#12471;&#12501;&#12488;&#20316;&#25104;&#12469;&#12509;&#12540;&#12488;</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="locked">
+    <section id="loginScreen" class="login-screen">
+      <div class="login-card">
+        <p class="eyebrow">Shift Board</p>
+        <h1>&#12471;&#12501;&#12488;&#24076;&#26395;&#12539;&#31649;&#29702;</h1>
+        <p class="login-copy">&#21517;&#21069;&#12434;&#36984;&#12435;&#12391;4&#26689;&#12497;&#12473;&#12527;&#12540;&#12489;&#12391;&#12525;&#12464;&#12452;&#12531;&#12375;&#12414;&#12377;&#12290;</p>
+        <form id="loginForm" class="login-form">
+          <label>
+            &#21517;&#21069;
+            <select id="loginUser"></select>
+          </label>
+          <label>
+            &#12497;&#12473;&#12527;&#12540;&#12489;
+            <input id="loginPassword" type="password" inputmode="numeric" maxlength="4" placeholder="4&#26689;" required />
+          </label>
+          <button class="primary" type="submit">&#12525;&#12464;&#12452;&#12531;</button>
+          <p id="loginError" class="form-error"></p>
+        </form>
+      </div>
+    </section>
+
+    <header class="topbar app-shell">
+      <div>
+        <p class="eyebrow">Shift Board</p>
+        <h1>&#24076;&#26395;&#12434;&#38598;&#12417;&#12390;&#12289;&#24215;&#38263;&#12364;&#27770;&#12417;&#12427;&#12471;&#12501;&#12488;&#34920;</h1>
+      </div>
+      <div class="session-box">
+        <span id="loginName"></span>
+        <button id="logoutButton">&#12525;&#12464;&#12450;&#12454;&#12488;</button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="controls">
+        <label>
+          &#26376;
+          <select id="monthSelect"></select>
+        </label>
+        <label>
+          &#34920;&#31034;&#31684;&#22258;
+          <select id="periodSelect">
+            <option value="first">&#21069;&#21322; 1&#26085;-15&#26085;</option>
+            <option value="second">&#24460;&#21322; 16&#26085;-&#26376;&#26411;</option>
+          </select>
+        </label>
+        <label>
+          &#26085;&#20184;
+          <select id="daySelect"></select>
+        </label>
+        <label>
+          &#24517;&#35201;&#20154;&#25968;
+          <input id="requiredPeople" type="number" min="1" max="12" value="4" />
+        </label>
+        <button id="autoPickButton" class="primary manager-only">&#12362;&#12377;&#12377;&#12417;&#36984;&#20986;</button>
+      </section>
+
+      <section id="modeNotice" class="notice"></section>
+
+      <section class="main-grid">
+        <section class="panel board-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>&#31649;&#29702;&#29992;&#12471;&#12501;&#12488;&#34920;</h2>
+              <p>&#65295; &#12399;&#20837;&#12428;&#12394;&#12356;&#12289;- &#12399;&#24076;&#26395;&#12354;&#12426;&#12384;&#12369;&#12393;&#19981;&#25505;&#29992;&#12289;&#26178;&#38291;&#12399;&#25505;&#29992;&#28168;&#12415;</p>
+            </div>
+            <span id="boardSummary"></span>
+          </div>
+          <div class="table-wrap">
+            <table id="shiftTable" class="shift-table"></table>
+          </div>
+        </section>
+
+        <aside class="panel side-panel">
+          <div class="panel-heading">
+            <h2 id="dayTitle"></h2>
+            <span id="coverageBadge" class="badge"></span>
+          </div>
+          <div id="candidateList" class="candidate-list"></div>
+          <div class="export-box manager-only">
+            <button id="copyButton">&#34920;&#12434;&#12467;&#12500;&#12540;</button>
+            <textarea id="exportText" readonly></textarea>
+          </div>
+        </aside>
+      </section>
+
+      <section class="lower-grid">
+        <section class="panel input-panel">
+          <div class="panel-heading">
+            <h2>&#33258;&#20998;&#12398;&#24076;&#26395;&#12471;&#12501;&#12488;</h2>
+            <span id="wishOwner"></span>
+          </div>
+          <form id="wishForm" class="wish-form staff-wish-form">
+            <label class="wide">
+              LINE&#12398;&#25991;&#31456;&#12434;&#12381;&#12398;&#12414;&#12414;&#36028;&#12426;&#20184;&#12369;
+              <textarea id="wishText" placeholder="6&#26376;&#21069;&#21322;&#12471;&#12501;&#12488;&#24076;&#26395;&#10;1&#26085;&#12289;2&#26085;&#12289;5&#26085; 18&#26178;&#65374;&#10;6&#26085;&#12289;13&#26085; 16&#26178;&#65374;"></textarea>
+            </label>
+            <button class="primary" type="submit">&#24076;&#26395;&#12434;&#21453;&#26144;</button>
+          </form>
+        </section>
+
+        <section class="panel manager-panel manager-only">
+          <div class="panel-heading">
+            <h2>&#20154;&#29289;&#12539;&#12497;&#12473;&#12527;&#12540;&#12489;&#31649;&#29702;</h2>
+            <span>&#24215;&#38263;&#29992;</span>
+          </div>
+          <form id="memberForm" class="member-form">
+            <input id="memberId" type="hidden" />
+            <label>
+              &#21517;&#21069;
+              <input id="memberName" required />
+            </label>
+            <label>
+              &#25285;&#24403;
+              <select id="memberSection">
+                <option value="kitchen">&#12461;&#12483;&#12481;&#12531;</option>
+                <option value="hall">&#12507;&#12540;&#12523;</option>
+              </select>
+            </label>
+            <label>
+              &#19978;&#12363;&#12425;&#12398;&#38918;
+              <select id="memberLevel">
+                <option value="0">&#24215;&#38263;</option>
+                <option value="1">&#12505;&#12486;&#12521;&#12531;</option>
+                <option value="2">&#20013;&#22533;</option>
+                <option value="3">&#26032;&#20154;</option>
+              </select>
+            </label>
+            <label>
+              4&#26689;&#12497;&#12473;&#12527;&#12540;&#12489;
+              <input id="memberPin" inputmode="numeric" maxlength="4" required />
+            </label>
+            <button class="primary" type="submit">&#20445;&#23384;</button>
+            <button id="clearMemberButton" type="button">&#26032;&#35215;&#20837;&#21147;</button>
+          </form>
+        </section>
+
+        <section class="panel staff-panel">
+          <div class="panel-heading">
+            <h2>&#12473;&#12479;&#12483;&#12501;&#19968;&#35239;</h2>
+            <span id="staffCount"></span>
+          </div>
+          <div id="staffList" class="staff-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
