@@ -8,7 +8,7 @@ Open `index.html` in a browser.
 
 Default login:
 
-- Manager: Mori / `1234`
+- Manager: 店長 / `1234`
 - Staff: any staff member / `1111`
 
 ## Render
@@ -32,7 +32,7 @@ To share shift requests between staff and manager:
 
 Default login:
 
-- Manager: Mori / `1234`
+- Manager: 店長 / `1234`
 - Staff: any staff member / `1111`
 
 This is a practical first version. For stronger security, replace the 4-digit PIN check with Supabase Auth later.

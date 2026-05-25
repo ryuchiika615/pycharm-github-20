@@ -2,9 +2,6 @@ const labels = {
   kitchen: "\u30ad\u30c3\u30c1\u30f3",
   hall: "\u30db\u30fc\u30eb",
   manager: "\u5e97\u9577",
-  veteran: "\u30d9\u30c6\u30e9\u30f3",
-  middle: "\u4e2d\u5805",
-  rookie: "\u65b0\u4eba",
   picked: "\u63a1\u7528",
   pick: "\u5165\u308c\u308b",
   people: "\u4eba",
@@ -15,27 +12,28 @@ const labels = {
 };
 
 const defaultStaff = [
-  { id: 1, name: "\u68ee", section: "kitchen", level: 0, type: "\u5e97\u9577", max: 176, base: 120, pin: "1234", admin: true },
-  { id: 2, name: "\u897f\u6751(\u512a)", section: "kitchen", level: 1, type: "\u4e00\u822c", max: 120, base: 58, pin: "1111" },
-  { id: 3, name: "\u897f\u6751(\u6d77)", section: "kitchen", level: 1, type: "\u4e00\u822c", max: 120, base: 54, pin: "1111" },
-  { id: 4, name: "\u7389\u7f6e", section: "kitchen", level: 1, type: "\u6276\u990a\u5185", max: 86, base: 44, pin: "1111" },
-  { id: 5, name: "\u6cb3\u539f", section: "kitchen", level: 2, type: "\u4e00\u822c", max: 120, base: 36, pin: "1111" },
-  { id: 6, name: "\u6749\u7530", section: "kitchen", level: 2, type: "\u4e00\u822c", max: 120, base: 42, pin: "1111" },
-  { id: 7, name: "\u718a\u6fa4", section: "kitchen", level: 3, type: "\u9ad8\u6821\u751f", max: 40, base: 20, pin: "1111" },
-  { id: 8, name: "\u6e21\u8fba", section: "hall", level: 1, type: "\u6276\u990a\u5185", max: 86, base: 48, pin: "1111" },
-  { id: 9, name: "\u5b89\u90e8", section: "hall", level: 1, type: "\u4e00\u822c", max: 120, base: 52, pin: "1111" },
-  { id: 10, name: "\u5317\u5ddd", section: "hall", level: 1, type: "\u6276\u990a\u5185", max: 86, base: 42, pin: "1111" },
-  { id: 11, name: "\u672c\u6a4b", section: "hall", level: 1, type: "\u4e00\u822c", max: 120, base: 40, pin: "1111" },
-  { id: 12, name: "\u65e9\u5ddd", section: "hall", level: 2, type: "\u4e00\u822c", max: 120, base: 32, pin: "1111" },
-  { id: 13, name: "\u5de5\u85e4", section: "hall", level: 2, type: "\u4e00\u822c", max: 120, base: 30, pin: "1111" },
-  { id: 14, name: "\u5c0f\u6797", section: "hall", level: 2, type: "\u9ad8\u6821\u751f", max: 40, base: 18, pin: "1111" },
-  { id: 15, name: "\u95a2\u53e3", section: "hall", level: 2, type: "\u4e00\u822c", max: 120, base: 28, pin: "1111" },
-  { id: 16, name: "\u5c71\u7530", section: "hall", level: 2, type: "\u4e00\u822c", max: 120, base: 34, pin: "1111" },
-  { id: 17, name: "\u6c34\u672c", section: "hall", level: 3, type: "\u9ad8\u6821\u751f", max: 40, base: 16, pin: "1111" },
-  { id: 18, name: "\u8494\u91ce", section: "hall", level: 3, type: "\u9ad8\u6821\u751f", max: 40, base: 14, pin: "1111" },
-  { id: 19, name: "\u6d45\u6d77", section: "hall", level: 3, type: "\u9ad8\u6821\u751f", max: 40, base: 12, pin: "1111" },
-  { id: 20, name: "\u7389\u5ddd", section: "hall", level: 3, type: "\u4e00\u822c", max: 120, base: 22, pin: "1111" },
-  { id: 21, name: "\u5c0f\u6797(\u82bd)", section: "hall", level: 3, type: "\u9ad8\u6821\u751f", max: 40, base: 8, pin: "1111" }
+  { id: 1, name: "\u5e97\u9577", section: "manager", sort: 0, type: "\u7ba1\u7406\u8005", max: 176, base: 0, pin: "1234", admin: true },
+  { id: 2, name: "\u68ee", section: "kitchen", sort: 1, type: "\u4e00\u822c", max: 120, base: 58, pin: "1111" },
+  { id: 3, name: "\u897f\u6751(\u512a)", section: "kitchen", sort: 2, type: "\u4e00\u822c", max: 120, base: 58, pin: "1111" },
+  { id: 4, name: "\u897f\u6751(\u6d77)", section: "kitchen", sort: 3, type: "\u4e00\u822c", max: 120, base: 54, pin: "1111" },
+  { id: 5, name: "\u7389\u7f6e", section: "kitchen", sort: 4, type: "\u6276\u990a\u5185", max: 86, base: 44, pin: "1111" },
+  { id: 6, name: "\u6cb3\u539f", section: "kitchen", sort: 5, type: "\u4e00\u822c", max: 120, base: 36, pin: "1111" },
+  { id: 7, name: "\u6749\u7530", section: "kitchen", sort: 6, type: "\u4e00\u822c", max: 120, base: 42, pin: "1111" },
+  { id: 8, name: "\u718a\u6fa4", section: "kitchen", sort: 7, type: "\u9ad8\u6821\u751f", max: 40, base: 20, pin: "1111" },
+  { id: 9, name: "\u6e21\u8fba", section: "hall", sort: 1, type: "\u6276\u990a\u5185", max: 86, base: 48, pin: "1111" },
+  { id: 10, name: "\u5b89\u90e8", section: "hall", sort: 2, type: "\u4e00\u822c", max: 120, base: 52, pin: "1111" },
+  { id: 11, name: "\u5317\u5ddd", section: "hall", sort: 3, type: "\u6276\u990a\u5185", max: 86, base: 42, pin: "1111" },
+  { id: 12, name: "\u672c\u6a4b", section: "hall", sort: 4, type: "\u4e00\u822c", max: 120, base: 40, pin: "1111" },
+  { id: 13, name: "\u65e9\u5ddd", section: "hall", sort: 5, type: "\u4e00\u822c", max: 120, base: 32, pin: "1111" },
+  { id: 14, name: "\u5de5\u85e4", section: "hall", sort: 6, type: "\u4e00\u822c", max: 120, base: 30, pin: "1111" },
+  { id: 15, name: "\u5c0f\u6797", section: "hall", sort: 7, type: "\u9ad8\u6821\u751f", max: 40, base: 18, pin: "1111" },
+  { id: 16, name: "\u95a2\u53e3", section: "hall", sort: 8, type: "\u4e00\u822c", max: 120, base: 28, pin: "1111" },
+  { id: 17, name: "\u5c71\u7530", section: "hall", sort: 9, type: "\u4e00\u822c", max: 120, base: 34, pin: "1111" },
+  { id: 18, name: "\u6c34\u672c", section: "hall", sort: 10, type: "\u9ad8\u6821\u751f", max: 40, base: 16, pin: "1111" },
+  { id: 19, name: "\u8494\u91ce", section: "hall", sort: 11, type: "\u9ad8\u6821\u751f", max: 40, base: 14, pin: "1111" },
+  { id: 20, name: "\u6d45\u6d77", section: "hall", sort: 12, type: "\u9ad8\u6821\u751f", max: 40, base: 12, pin: "1111" },
+  { id: 21, name: "\u7389\u5ddd", section: "hall", sort: 13, type: "\u4e00\u822c", max: 120, base: 22, pin: "1111" },
+  { id: 22, name: "\u5c0f\u6797(\u82bd)", section: "hall", sort: 14, type: "\u9ad8\u6821\u751f", max: 40, base: 8, pin: "1111" }
 ];
 
 let staff = load("shiftStaff", defaultStaff);
@@ -48,11 +46,15 @@ let selectedDay = 1;
 let cloud = null;
 let cloudReady = false;
 
-if (!staff.every((member) => member.pin) || !staff.some((member) => member.name === "\u5c0f\u6797(\u82bd)")) {
-  staff = structuredClone(defaultStaff);
-  wishes = {};
-  assignments = {};
+function resetRosterIfOutdated() {
+  if (!staff.every((member) => member.pin) || !staff.some((member) => member.name === "\u5e97\u9577") || staff.some((member) => "level" in member)) {
+    staff = structuredClone(defaultStaff);
+    wishes = {};
+    assignments = {};
+  }
 }
+
+resetRosterIfOutdated();
 
 const $ = (selector) => document.querySelector(selector);
 const monthSelect = $("#monthSelect");
@@ -102,6 +104,8 @@ async function connectCloud() {
     staff = data.data.staff || staff;
     wishes = data.data.wishes || wishes;
     assignments = data.data.assignments || assignments;
+    resetRosterIfOutdated();
+    saveAll();
   } else {
     await cloud.from("shift_state").insert({ id: "main", data: { staff, wishes, assignments } });
   }
@@ -148,8 +152,9 @@ function isManager() {
 
 function sortedStaff() {
   return [...staff].sort((a, b) => {
-    if (a.section !== b.section) return a.section === "kitchen" ? -1 : 1;
-    if (a.level !== b.level) return Number(a.level) - Number(b.level);
+    const order = { manager: 0, kitchen: 1, hall: 2 };
+    if (a.section !== b.section) return order[a.section] - order[b.section];
+    if (a.sort !== b.sort) return Number(a.sort) - Number(b.sort);
     return a.id - b.id;
   });
 }
@@ -244,12 +249,12 @@ function addWish(member, day, start, end) {
 function seedWishesIfEmpty() {
   if (Object.keys(wishes).length) return;
   const examples = [
-    { id: 3, text: "1\u65e5\u30012\u65e5\u30015\u65e5\u30018\u65e5\u300110\u65e5\u300112\u65e5\n18\u6642~\n6\u65e5\u300113\u65e5 16\u6642~\n15\u65e5 11\u6642~" },
-    { id: 20, text: "2\u65e5\u30014\u65e5\u30016\u65e5\u30017\u65e5\n9\u65e5\u300111\u65e5\u300114\u65e5 ~16\u6642" },
-    { id: 4, text: "2\u65e5\u30013\u65e5\u30014\u65e5\u30019\u65e5\u300110\u65e5\u300111\u65e5\u300112\u65e5\n9\u6642~14\u6642" },
-    { id: 17, text: "2\u65e57\u65e511\u65e513\u65e5" },
-    { id: 18, text: "12\u65e5 18\u6642~\n13\u65e5\u300114\u65e5 16\u6642~" },
-    { id: 10, text: "3\u65e5\u30016\u65e5\u30017\u65e5\u30018\u65e5\u300110\u65e5\u300113\u65e5\u300114\u65e5\u300115\u65e5\n10\u6642~14\u6642" }
+    { id: 4, text: "1\u65e5\u30012\u65e5\u30015\u65e5\u30018\u65e5\u300110\u65e5\u300112\u65e5\n18\u6642~\n6\u65e5\u300113\u65e5 16\u6642~\n15\u65e5 11\u6642~" },
+    { id: 21, text: "2\u65e5\u30014\u65e5\u30016\u65e5\u30017\u65e5\n9\u65e5\u300111\u65e5\u300114\u65e5 ~16\u6642" },
+    { id: 5, text: "2\u65e5\u30013\u65e5\u30014\u65e5\u30019\u65e5\u300110\u65e5\u300111\u65e5\u300112\u65e5\n9\u6642~14\u6642" },
+    { id: 18, text: "2\u65e57\u65e511\u65e513\u65e5" },
+    { id: 19, text: "12\u65e5 18\u6642~\n13\u65e5\u300114\u65e5 16\u6642~" },
+    { id: 11, text: "3\u65e5\u30016\u65e5\u30017\u65e5\u30018\u65e5\u300110\u65e5\u300113\u65e5\u300114\u65e5\u300115\u65e5\n10\u6642~14\u6642" }
   ];
   examples.forEach((example) => {
     const member = staffById(example.id);
@@ -260,10 +265,14 @@ function seedWishesIfEmpty() {
 
 function renderLoginOptions() {
   const groups = {
+    manager: sortedStaff().filter((member) => member.section === "manager"),
     kitchen: sortedStaff().filter((member) => member.section === "kitchen"),
     hall: sortedStaff().filter((member) => member.section === "hall")
   };
   $("#loginUser").innerHTML = `
+    <optgroup label="${labels.manager}">
+      ${groups.manager.map((member) => `<option value="${member.id}">${member.name}</option>`).join("")}
+    </optgroup>
     <optgroup label="${labels.kitchen}">
       ${groups.kitchen.map((member) => `<option value="${member.id}">${member.name}</option>`).join("")}
     </optgroup>
@@ -304,6 +313,7 @@ function renderTable() {
   let lastSection = "";
 
   sortedStaff().forEach((member) => {
+    if (member.section === "manager") return;
     if (member.section !== lastSection) {
       if (member.section === "hall") rows.push(blankRows(3, days.length + 1, "\u88fd\u9eba\u30fb\u30e1\u30e2"));
       rows.push(`<tr class="section-row"><td colspan="${days.length + 1}">${member.section === "kitchen" ? labels.kitchen : labels.hall}</td></tr>`);
@@ -389,14 +399,14 @@ function renderStaffList() {
   $("#staffCount").textContent = `${staff.length}${labels.people}`;
   $("#staffList").innerHTML = sortedStaff().map((member) => {
     const tag = risk(member);
-    const level = member.level === 0 ? labels.manager : member.level === 1 ? labels.veteran : member.level === 2 ? labels.middle : labels.rookie;
+    const sectionLabel = member.section === "manager" ? labels.manager : member.section === "kitchen" ? labels.kitchen : labels.hall;
     return `
       <article class="staff-card">
         <div class="row">
           <span class="name">${member.name}</span>
           <span class="tag ${tag.className}">${tag.text}</span>
         </div>
-        <div class="meta">${member.section === "kitchen" ? labels.kitchen : labels.hall} / ${level} / ${member.type}</div>
+        <div class="meta">${sectionLabel} / ${member.type}</div>
         ${isManager() ? `<button class="edit-member manager-only" data-id="${member.id}">\u7de8\u96c6</button>` : ""}
       </article>
     `;
@@ -442,7 +452,7 @@ function autoPick() {
   const required = Number(requiredPeople.value);
   periodDays().forEach((day) => {
     assignments[key(day)] = [...(wishes[key(day)] || [])]
-      .sort((a, b) => staffById(a.staffId).level - staffById(b.staffId).level)
+      .sort((a, b) => staffById(a.staffId).sort - staffById(b.staffId).sort)
       .slice(0, required)
       .map((wish) => ({ staffId: wish.staffId, start: wish.start, end: wish.end }));
   });
@@ -464,7 +474,7 @@ function clearMemberForm() {
   $("#memberId").value = "";
   $("#memberName").value = "";
   $("#memberSection").value = "hall";
-  $("#memberLevel").value = "3";
+  $("#memberSort").value = "99";
   $("#memberPin").value = "1111";
 }
 
@@ -473,7 +483,7 @@ function editMember(id) {
   $("#memberId").value = member.id;
   $("#memberName").value = member.name;
   $("#memberSection").value = member.section;
-  $("#memberLevel").value = member.level;
+  $("#memberSort").value = member.sort;
   $("#memberPin").value = member.pin;
 }
 
@@ -550,16 +560,16 @@ $("#memberForm").addEventListener("submit", (event) => {
   const data = {
     name: $("#memberName").value.trim(),
     section: $("#memberSection").value,
-    level: Number($("#memberLevel").value),
+    sort: Number($("#memberSort").value),
     pin: $("#memberPin").value.trim(),
-    admin: Number($("#memberLevel").value) === 0
+    admin: $("#memberSection").value === "manager"
   };
   if (!/^\d{4}$/.test(data.pin) || !data.name) return;
   if (id) {
     const member = staffById(id);
     Object.assign(member, data);
   } else {
-    staff.push({ id: Math.max(...staff.map((member) => member.id)) + 1, type: "\u4e00\u822c", max: 120, base: 0, ...data });
+    staff.push({ id: Math.max(...staff.map((member) => member.id)) + 1, type: data.admin ? "\u7ba1\u7406\u8005" : "\u4e00\u822c", max: 120, base: 0, ...data });
   }
   currentUser = staffById(currentUser.id);
   clearMemberForm();
