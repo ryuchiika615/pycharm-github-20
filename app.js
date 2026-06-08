@@ -46,6 +46,7 @@ let currentUser = null;
 let selectedMonth = 6;
 let period = "first";
 let selectedDay = 1;
+let currentView = "staff";
 let cloud = null;
 let cloudReady = false;
 
@@ -63,6 +64,7 @@ const $ = (selector) => document.querySelector(selector);
 const monthSelect = $("#monthSelect");
 const periodSelect = $("#periodSelect");
 const daySelect = $("#daySelect");
+const viewSelect = $("#viewSelect");
 const requiredMorning = $("#requiredMorning");
 const requiredEvening = $("#requiredEvening");
 const shiftTable = $("#shiftTable");
@@ -71,22 +73,25 @@ const exportText = $("#exportText");
 const openTime = "09:00";
 const closeTime = "22:00";
 const topReportRows = [
-  { id: "salesBudget", label: "\u58f2\u4e0a\u4e88\u7b97" },
-  { id: "lastYearSales", label: "\u524d\u5e74\u58f2\u4e0a" },
-  { id: "yearRate", label: "\u524d\u5e74\u6bd4" },
-  { id: "lastYearShiftSales", label: "\u524d\u5e74\u30b7\u30d5\u30c8\u58f2\u4e0a" },
-  { id: "lunchPeople", label: "\u30e9\u30f3\u30c1\u4eba\u54e1" },
-  { id: "dinnerPeople", label: "\u30c7\u30a3\u30ca\u30fc\u4eba\u54e1" }
+  { id: "salesBudget", label: "\u58f2\u4e0a\u4e88\u6e2c(\u5343\u5186)", editable: true },
+  { id: "lastYearSales", label: "\u524d\u5e74\u58f2\u4e0a(\u5343\u5186)", editable: true },
+  { id: "yearRate", label: "\u524d\u5e74\u6bd4", calculated: true },
+  { id: "lastYearShiftSales", label: "\u524d\u5e74\u30b7\u30d5\u30c8\u58f2\u4e0a", editable: true },
+  { id: "lunchPeople", label: "\u30e9\u30f3\u30c1\u4eba\u54e1", calculated: true },
+  { id: "dinnerPeople", label: "\u30c7\u30a3\u30ca\u30fc\u4eba\u54e1", calculated: true }
 ];
 const bottomReportRows = [
-  { id: "workHours", label: "\u52b4\u50cd\u6642\u9593" },
-  { id: "employeeHours", label: "\u793e\u54e1\u52b4\u50cd\u6642\u9593" },
-  { id: "partTimeHours", label: "AP\u6642\u9593" },
-  { id: "laborCost", label: "\u4eba\u4ef6\u8cbb" },
-  { id: "laborCostRate", label: "\u4eba\u4ef6\u8cbb\u7387" },
-  { id: "salesPerHour", label: "\u4eba\u6642\u58f2\u4e0a" },
-  { id: "lStaff", label: "L\u30b9\u30bf\u30c3\u30d5" },
-  { id: "dStaff", label: "D\u30b9\u30bf\u30c3\u30d5" }
+  { id: "managerWork", label: "\u5e97\u9577\u52b4\u50cd\u6642\u9593", editable: true },
+  { id: "employeeHours", label: "\u793e\u54e1\u52b4\u50cd\u6642\u9593", overridable: true },
+  { id: "employeeBreak", label: "\u793e\u54e1\u4f11\u61a9\u6642\u9593", overridable: true },
+  { id: "employeeNoBreak", label: "\u793e\u54e1\u4f11\u61a9\u306a\u3057\u6642\u9593", editable: true },
+  { id: "partTimeHours", label: "AP\u6642\u9593", calculated: true },
+  { id: "totalHours", label: "\u52b4\u50cd\u6642\u9593", calculated: true },
+  { id: "laborCost", label: "\u4eba\u4ef6\u8cbb", editable: true },
+  { id: "laborCostRate", label: "\u4eba\u4ef6\u8cbb\u7387", calculated: true },
+  { id: "salesPerHour", label: "\u4eba\u6642\u58f2\u4e0a", calculated: true },
+  { id: "lStaff", label: "L\u30b9\u30bf\u30c3\u30d5", calculated: true },
+  { id: "dStaff", label: "D\u30b9\u30bf\u30c3\u30d5", calculated: true }
 ];
 
 function load(name, fallback) {
@@ -357,8 +362,13 @@ function renderMode() {
 }
 
 function renderTable() {
+  if (currentView === "manager") {
+    renderManagerTable();
+    return;
+  }
+  $("#boardTitle").textContent = "\u30a2\u30eb\u30d0\u30a4\u30c8\u7528\u30b7\u30d5\u30c8\u8868";
   const days = periodDays();
-  const rows = [reportRows(topReportRows, days, "top-report-row")];
+  const rows = [];
   let lastSection = "";
 
   sortedStaff().forEach((member) => {
@@ -376,7 +386,6 @@ function renderTable() {
     `);
   });
   rows.push(salesRows(days));
-  rows.push(reportRows(bottomReportRows, days, "bottom-report-row"));
 
   shiftTable.innerHTML = `
     <thead>
@@ -391,19 +400,98 @@ function renderTable() {
   $("#boardSummary").textContent = `${labels.desired} ${totalWishes}${labels.people} / ${labels.decided} ${totalAssigned}${labels.people}`;
 }
 
+function renderManagerTable() {
+  $("#boardTitle").textContent = "\u90e8\u9577\u7528\u30b7\u30d5\u30c8\u8868";
+  const days = periodDays();
+  const rows = [
+    reportRows(topReportRows, days, "top-report-row"),
+    managerTimeRows(days),
+    managerStaffRows(days),
+    reportRows(bottomReportRows, days, "bottom-report-row")
+  ];
+  shiftTable.innerHTML = `
+    <thead>
+      <tr><th class="name-col">\u66dc\u65e5</th>${days.map((day) => `<th class="${dayClass(day)} ${day === selectedDay ? "selected-day" : ""}" colspan="4">${weekday(day)}</th>`).join("")}</tr>
+      <tr><th class="name-col">\u540d\u524d</th>${days.map((day) => `<th class="${dayClass(day)} ${day === selectedDay ? "selected-day" : ""}" colspan="4">${day}</th>`).join("")}</tr>
+    </thead>
+    <tbody>${rows.join("")}</tbody>
+  `;
+  $("#boardSummary").textContent = "\u90e8\u9577\u63d0\u51fa\u7528";
+}
+
 function reportRows(definitions, days, className) {
+  const span = currentView === "manager" ? 4 : 1;
   return definitions.map((definition) => `
     <tr class="${className}">
       <td class="name-col">${definition.label}</td>
-      ${days.map((day) => `<td class="${day === selectedDay ? "selected-day" : ""}">${reportCell(day, definition.id)}</td>`).join("")}
+      ${days.map((day) => `<td colspan="${span}" class="${day === selectedDay ? "selected-day" : ""}">${reportCell(day, definition)}</td>`).join("")}
     </tr>
   `).join("");
 }
 
-function reportCell(day, field) {
-  const value = reportNotes[key(day)]?.[field] || "";
-  if (!isManager()) return value;
-  return `<input class="table-text-input" data-action="report" data-day="${day}" data-field="${field}" maxlength="8" value="${value}" />`;
+function reportCell(day, definition) {
+  const value = reportValue(day, definition.id);
+  const editable = definition.editable || definition.overridable;
+  if (!isManager() || !editable) return value;
+  return `<input class="table-text-input" data-action="report" data-day="${day}" data-field="${definition.id}" maxlength="8" value="${value}" />`;
+}
+
+function reportValue(day, field) {
+  const note = reportNotes[key(day)] || {};
+  if (field === "yearRate") {
+    const budget = Number(note.salesBudget || 0);
+    const last = Number(note.lastYearSales || 0);
+    if (!budget || !last) return "";
+    // 前年比（増減率）を計算： (今年 - 前年) / 前年 * 100
+    const pct = Math.round(((budget - last) / last) * 100);
+    return pct > 0 ? `+${pct}%` : `${pct}%`;
+  }
+  if (field === "lunchPeople") return countAssigned(day, "09:00", "15:00");
+  if (field === "dinnerPeople") return countAssigned(day, "17:00", closeTime);
+  if (field === "partTimeHours") return round1(partTimeHours(day));
+  if (field === "totalHours") return round1(partTimeHours(day) + Number(managerEmployeeHours(day) || 0));
+  if (field === "employeeHours") return note.employeeHours || managerEmployeeHours(day);
+  if (field === "employeeBreak") return note.employeeBreak || "1.5";
+  if (field === "laborCostRate") {
+    const labor = Number(note.laborCost || 0);
+    const sales = Number(note.salesBudget || 0);
+    return labor && sales ? `${Math.round((labor / sales) * 100)}%` : "";
+  }
+  if (field === "salesPerHour") {
+    const sales = Number(note.salesBudget || 0);
+    const hours = Number(reportValue(day, "totalHours") || 0);
+    return sales && hours ? Math.round(sales / hours) : "";
+  }
+  if (field === "lStaff") return countAssigned(day, "09:00", "15:00");
+  if (field === "dStaff") return countAssigned(day, "17:00", closeTime);
+  return note[field] || "";
+}
+
+function round1(value) {
+  return Math.round(Number(value || 0) * 10) / 10;
+}
+
+function countAssigned(day, start, end) {
+  return (assignments[key(day)] || []).filter((item) => overlaps(item, start, end)).length;
+}
+
+function partTimeHours(day) {
+  return (assignments[key(day)] || [])
+    .filter((item) => !staffById(item.staffId)?.admin)
+    .reduce((sum, item) => sum + hoursBetween(item.start, item.end), 0);
+}
+
+function managerEmployeeHours(day) {
+  const value = (reportNotes[key(day)] || {}).managerWork || "";
+  return computeEmployeeHoursFromManagerValue(value);
+}
+
+function computeEmployeeHoursFromManagerValue(value) {
+  value = String(value || "");
+  if (value.includes("\u516c\u4f11")) return "-1.5";
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || value === "") return "";
+  return round1(numeric - 1.5);
 }
 
 function sectionName(section) {
@@ -485,6 +573,60 @@ function salesCell(day, part) {
       <input data-action="sales" data-day="${day}" data-part="${part}" data-field="Count" inputmode="numeric" maxlength="3" value="${count}" />
       <span>)</span>
     </span>
+  `;
+}
+
+function managerTimeRows(days) {
+  return `
+    <tr class="section-row"><td colspan="${days.length * 4 + 1}">\u5e97\u9577</td></tr>
+    <tr class="manager-shift-row">
+      <td class="name-col">\u5e97\u9577</td>
+      ${days.map((day) => managerDayCells(day)).join("")}
+    </tr>
+  `;
+}
+
+function managerDayCells(day) {
+  const note = reportNotes[key(day)] || {};
+  if (!isManager()) {
+    return `<td colspan="2">${note.managerStart || ""}</td><td colspan="2">${note.managerEnd || ""}</td>`;
+  }
+  return `
+    <td colspan="2" class="${day === selectedDay ? "selected-day" : ""}">
+      <input class="table-text-input" data-action="report" data-day="${day}" data-field="managerStart" maxlength="5" placeholder="\u51fa" value="${note.managerStart || ""}" />
+    </td>
+    <td colspan="2" class="${day === selectedDay ? "selected-day" : ""}">
+      <input class="table-text-input" data-action="report" data-day="${day}" data-field="managerEnd" maxlength="5" placeholder="\u9000" value="${note.managerEnd || ""}" />
+    </td>
+  `;
+}
+
+function managerStaffRows(days) {
+  const rows = [];
+  ["kitchen", "hall"].forEach((section) => {
+    rows.push(`<tr class="section-row"><td colspan="${days.length * 4 + 1}">${sectionName(section)}</td></tr>`);
+    sortedStaff().filter((member) => member.section === section).forEach((member) => {
+      rows.push(`
+        <tr>
+          <td class="name-col">${member.name}</td>
+          ${days.map((day) => managerStaffCells(day, member)).join("")}
+        </tr>
+      `);
+    });
+  });
+  return rows.join("");
+}
+
+function managerStaffCells(day, member) {
+  const assigned = getAssignment(day, member.id);
+  const lunch = assigned && overlaps(assigned, "09:00", "15:00") ? assigned : null;
+  const dinner = assigned && overlaps(assigned, "17:00", closeTime) ? assigned : null;
+  const selectedClass = day === selectedDay ? "selected-day" : "";
+  return `
+    <td class="${selectedClass}">${lunch ? lunch.start.replace(":00", "") : ""}</td>
+    <td class="${selectedClass}">${lunch ? lunch.end.replace(":00", "") : ""}</td>
+    <td class="${selectedClass}">${dinner ? dinner.start.replace(":00", "") : ""}</td>
+    <td class="${selectedClass}">${dinner ? dinner.end.replace(":00", "") : ""}</td>
   `;
 }
 
@@ -724,7 +866,26 @@ shiftTable.addEventListener("change", (event) => {
   }
   if (field.dataset.action === "report") {
     reportNotes[key(day)] ||= {};
-    reportNotes[key(day)][field.dataset.field] = field.value.slice(0, 8);
+    const note = reportNotes[key(day)];
+    const fieldName = field.dataset.field;
+    const prevManagerWork = note.managerWork || "";
+    // save the raw input (trim to reasonable length)
+    note[fieldName] = field.value.slice(0, 8);
+
+    // If managerWork changed, auto-fill employee hours/break unless manager previously overrode them
+    if (fieldName === "managerWork") {
+      const prevAuto = computeEmployeeHoursFromManagerValue(prevManagerWork);
+      const newAuto = computeEmployeeHoursFromManagerValue(note.managerWork);
+      const hadEmployeeHours = Object.prototype.hasOwnProperty.call(note, "employeeHours");
+      if (!hadEmployeeHours || String(note.employeeHours) === String(prevAuto)) {
+        note.employeeHours = newAuto;
+      }
+      const hadEmployeeBreak = Object.prototype.hasOwnProperty.call(note, "employeeBreak");
+      if (!hadEmployeeBreak) {
+        // default employee break is 1.5h (even when 公休 is entered)
+        note.employeeBreak = "1.5";
+      }
+    }
   }
   saveAll();
   renderAll();
