@@ -41,6 +41,7 @@ let wishes = load("shiftWishes", {});
 let assignments = load("shiftAssignments", {});
 let noodleAssignments = load("shiftNoodleAssignments", {});
 let salesNotes = load("shiftSalesNotes", {});
+let reportNotes = load("shiftReportNotes", {});
 let currentUser = null;
 let selectedMonth = 6;
 let period = "first";
@@ -69,6 +70,24 @@ const candidateList = $("#candidateList");
 const exportText = $("#exportText");
 const openTime = "09:00";
 const closeTime = "22:00";
+const topReportRows = [
+  { id: "salesBudget", label: "\u58f2\u4e0a\u4e88\u7b97" },
+  { id: "lastYearSales", label: "\u524d\u5e74\u58f2\u4e0a" },
+  { id: "yearRate", label: "\u524d\u5e74\u6bd4" },
+  { id: "lastYearShiftSales", label: "\u524d\u5e74\u30b7\u30d5\u30c8\u58f2\u4e0a" },
+  { id: "lunchPeople", label: "\u30e9\u30f3\u30c1\u4eba\u54e1" },
+  { id: "dinnerPeople", label: "\u30c7\u30a3\u30ca\u30fc\u4eba\u54e1" }
+];
+const bottomReportRows = [
+  { id: "workHours", label: "\u52b4\u50cd\u6642\u9593" },
+  { id: "employeeHours", label: "\u793e\u54e1\u52b4\u50cd\u6642\u9593" },
+  { id: "partTimeHours", label: "AP\u6642\u9593" },
+  { id: "laborCost", label: "\u4eba\u4ef6\u8cbb" },
+  { id: "laborCostRate", label: "\u4eba\u4ef6\u8cbb\u7387" },
+  { id: "salesPerHour", label: "\u4eba\u6642\u58f2\u4e0a" },
+  { id: "lStaff", label: "L\u30b9\u30bf\u30c3\u30d5" },
+  { id: "dStaff", label: "D\u30b9\u30bf\u30c3\u30d5" }
+];
 
 function load(name, fallback) {
   try {
@@ -84,12 +103,13 @@ function saveAll() {
   localStorage.setItem("shiftAssignments", JSON.stringify(assignments));
   localStorage.setItem("shiftNoodleAssignments", JSON.stringify(noodleAssignments));
   localStorage.setItem("shiftSalesNotes", JSON.stringify(salesNotes));
+  localStorage.setItem("shiftReportNotes", JSON.stringify(reportNotes));
   if (cloudReady) {
     cloud
       .from("shift_state")
       .upsert({
         id: "main",
-        data: { staff, wishes, assignments, noodleAssignments, salesNotes },
+        data: { staff, wishes, assignments, noodleAssignments, salesNotes, reportNotes },
         updated_at: new Date().toISOString()
       })
       .then(({ error }) => {
@@ -114,10 +134,11 @@ async function connectCloud() {
     assignments = data.data.assignments || assignments;
     noodleAssignments = data.data.noodleAssignments || noodleAssignments;
     salesNotes = data.data.salesNotes || salesNotes;
+    reportNotes = data.data.reportNotes || reportNotes;
     resetRosterIfOutdated();
     saveAll();
   } else {
-    await cloud.from("shift_state").insert({ id: "main", data: { staff, wishes, assignments, noodleAssignments, salesNotes } });
+    await cloud.from("shift_state").insert({ id: "main", data: { staff, wishes, assignments, noodleAssignments, salesNotes, reportNotes } });
   }
 }
 
@@ -337,7 +358,7 @@ function renderMode() {
 
 function renderTable() {
   const days = periodDays();
-  const rows = [];
+  const rows = [reportRows(topReportRows, days, "top-report-row")];
   let lastSection = "";
 
   sortedStaff().forEach((member) => {
@@ -355,6 +376,7 @@ function renderTable() {
     `);
   });
   rows.push(salesRows(days));
+  rows.push(reportRows(bottomReportRows, days, "bottom-report-row"));
 
   shiftTable.innerHTML = `
     <thead>
@@ -367,6 +389,21 @@ function renderTable() {
   const totalWishes = days.reduce((sum, day) => sum + (wishes[key(day)] || []).length, 0);
   const totalAssigned = days.reduce((sum, day) => sum + (assignments[key(day)] || []).length, 0);
   $("#boardSummary").textContent = `${labels.desired} ${totalWishes}${labels.people} / ${labels.decided} ${totalAssigned}${labels.people}`;
+}
+
+function reportRows(definitions, days, className) {
+  return definitions.map((definition) => `
+    <tr class="${className}">
+      <td class="name-col">${definition.label}</td>
+      ${days.map((day) => `<td class="${day === selectedDay ? "selected-day" : ""}">${reportCell(day, definition.id)}</td>`).join("")}
+    </tr>
+  `).join("");
+}
+
+function reportCell(day, field) {
+  const value = reportNotes[key(day)]?.[field] || "";
+  if (!isManager()) return value;
+  return `<input class="table-text-input" data-action="report" data-day="${day}" data-field="${field}" maxlength="8" value="${value}" />`;
 }
 
 function sectionName(section) {
@@ -685,14 +722,23 @@ shiftTable.addEventListener("change", (event) => {
     const prop = `${field.dataset.part}${field.dataset.field}`;
     salesNotes[key(day)][prop] = field.value.replace(/\D/g, "").slice(0, 3);
   }
+  if (field.dataset.action === "report") {
+    reportNotes[key(day)] ||= {};
+    reportNotes[key(day)][field.dataset.field] = field.value.slice(0, 8);
+  }
   saveAll();
   renderAll();
 });
 
 shiftTable.addEventListener("input", (event) => {
-  const field = event.target.closest("input[data-action='sales']");
+  const field = event.target.closest("input[data-action]");
   if (!field || !isManager()) return;
-  field.value = field.value.replace(/\D/g, "").slice(0, 3);
+  if (field.dataset.action === "sales") {
+    field.value = field.value.replace(/\D/g, "").slice(0, 3);
+  }
+  if (field.dataset.action === "report") {
+    field.value = field.value.slice(0, 8);
+  }
 });
 
 candidateList.addEventListener("click", (event) => {

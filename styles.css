@@ -453,6 +453,19 @@ textarea {
   appearance: none;
 }
 
+.table-text-input {
+  width: 100%;
+  min-height: 26px;
+  border: 0;
+  border-bottom: 1px solid #c8d0ca;
+  border-radius: 0;
+  padding: 1px;
+  background: transparent;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .shortage-row td {
   height: 36px;
   background: #fff4df;
@@ -463,6 +476,18 @@ textarea {
 .sales-row td {
   height: 42px;
   background: #fffdf7;
+}
+
+.top-report-row td {
+  height: 36px;
+  background: #f8fff6;
+  font-weight: 800;
+}
+
+.bottom-report-row td {
+  height: 34px;
+  background: #f3fbff;
+  font-weight: 800;
 }
 
 .sales-inputs {
@@ -558,6 +583,7 @@ textarea {
 }
 
 .screenshot-mode .table-select,
+.screenshot-mode .table-text-input,
 .screenshot-mode .sales-inputs input {
   font-size: inherit;
   border: 0;
